@@ -1,13 +1,13 @@
 import time
+import base64
+import re
+
 
 class BrowserHistory:
-        def __init__(self):
-            self.url = None
-            self.visit_time = time.time()
-            self.bookmark = bool()
-
-
-
+        def __init__(self, url: str = None, visit_time: float = None, bookmark: bool = False):
+            self.url = url
+            self.visit_time = visit_time
+            self.bookmark = bookmark
 
 class DoubleNode:
     def __init__(self, data):
@@ -142,7 +142,7 @@ def add_test_data(list):
         {"url": "https://storybook.js.org", "time": time.time() - 410000, "bookmark": False},
         {"url": "https://figma.com", "time": time.time() - 450000, "bookmark": False},
         {"url": "https://notion.so", "time": time.time() - 500000, "bookmark": True},
-        {"url": "https://trello.com", "time": time.time() - 560000, "bookmark": False},
+        {"url": "https://trello.com", "time": time.time() - 560000, "bookmark": False}
     ]
     for i in test_data:
         page=BrowserHistory()
@@ -156,6 +156,39 @@ def print_page(page):
     print(f" URL: {page.url}")
     print(f" Visit time: {time.ctime(page.visit_time)}")
     print(f" Bookmark: {page.bookmark}")
+
+
+def get_valid_time_range():
+    while True:
+        try:
+            start_input = input("Start time (dd.mm.yyyy hh:mm:ss): ").strip()
+            end_input = input("End time (dd.mm.yyyy hh:mm:ss): ").strip()
+
+            pattern = r'^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}$'
+
+            if not re.match(pattern, start_input):
+                print("Invalid start time format")
+                continue
+            if not re.match(pattern, end_input):
+                print("Invalid end time format")
+                continue
+
+            start_struct = time.strptime(start_input, "%d.%m.%Y %H:%M:%S")
+            end_struct = time.strptime(end_input, "%d.%m.%Y %H:%M:%S")
+
+            start_timestamp = time.mktime(start_struct)
+            end_timestamp = time.mktime(end_struct)
+
+            if start_timestamp > end_timestamp:
+                print("Start time cannot be after end time")
+                continue
+
+            return start_timestamp, end_timestamp
+
+        except:
+            print("Invalid time format")
+
+
 
 if __name__ == '__main__':
     list = DoubleLinkedList()
@@ -179,8 +212,20 @@ if __name__ == '__main__':
     print("6. Import history from file")
     print("7. Add test data")
     print("0. Quit")
+
     while i!=0:
-        i = int(input())
+
+        try:
+            i = int(input())
+
+        except:
+            print("Invalid input")
+            print("Please enter a valid option")
+
+        if i>7:
+            print("Invalid input")
+            print("Please enter a valid option")
+
         if i==1:
             if list.size==0:
                 print("History is empty")
@@ -191,6 +236,7 @@ if __name__ == '__main__':
                     print_page(curr_page.data)
                 else:
                     print("It's already last element")
+
         if i==2:
             if list.size==0:
                 print("History is empty")
@@ -209,18 +255,61 @@ if __name__ == '__main__':
             print("Now history is empty!")
 
         if i==4:
-            domain = str(input("Enter the domain of the page(or part of it):"))
-            for i in range(list.size):
-                fl=-1
+            curr_page_f = list.head
+            domain = str(input("Enter the domain of the page(or part of it): "))
+            fl=0
+            cnt=0
+            for i1 in range(list.size):
 
-                if domain in curr_page.data.url:
-                    if fl==-1:
-                        fl=0
-                        print("┌" + "─" * len(curr_page.data.url) +"┬" + "─" * len(time.ctime(curr_page.data.visit_time)) +"┬" + "─" * len(str(curr_page.data.bookmark)) + "┐")
-                print("│" + str(curr_page.data.url) + "│" + time.ctime(curr_page.data.visit_time) + "│" + str(curr_page.data.bookmark) + "│")
+                if domain in curr_page_f.data.url:
+                    fl=1
+                    cnt+=1
+                    print(f" URL: {curr_page_f.data.url} Visit time:{time.ctime(float(curr_page_f.data.visit_time))} Bookmark:{curr_page_f.data.bookmark}")
+                if curr_page_f.next != None:
+                    curr_page_f = curr_page_f.next
+                else:
+                    break
             if fl==0:
-                print("└" + "─" * len(curr_page.data.url) + "┴" + "─" * len(time.ctime(curr_page.data.visit_time)) + "┴" + "─" * len(str(curr_page.data.bookmark)) + "┘")
+                print("No such domain in history")
+            else:
+                print(f"{cnt} pages found for this domain")
+
+        if i==5:
+
+            start_ts, end_ts = get_valid_time_range()
+
+            curr_page_f = list.head
+            fl=0
+            cnt=0
+            while curr_page_f:
+                if start_ts <= float(curr_page_f.data.visit_time) <= end_ts:
+                    fl=1
+                    cnt+=1
+                    print(f" URL: {curr_page_f.data.url} Visit time:{time.ctime(float(curr_page_f.data.visit_time))} Bookmark:{curr_page_f.data.bookmark}")
+                curr_page_f = curr_page_f.next
+
+            if fl==0:
+                print("No browser history found for this time period")
+            else:
+                print(f"{cnt} pages found for this time period")
+
+        if i==6:
+            f = open("data.b64", "r", encoding="utf-8")
+            b64_string = f.read()
+            decoded_data = base64.b64decode(b64_string).decode('utf-8').split("\r\n")
+            for i in decoded_data:
+
+                i=i.split()
+                page = BrowserHistory()
+                page.url = i[0]
+                page.visit_time = i[1]
+                page.bookmark = i[2]
+                list.insert_at_end(page)
+            print("Data from file was successfully added!")
+            print(f"Current history size {list.size}")
+
         if i==7:
             add_test_data(list)
             print("Test data was successfully added!")
             print(f"Current history size {list.size}")
+
