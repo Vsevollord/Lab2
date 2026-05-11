@@ -161,14 +161,16 @@ def print_page(page):
 def get_valid_time_range():
     while True:
         try:
-            start_input = input("Start time (dd.mm.yyyy hh:mm:ss): ").strip()
-            end_input = input("End time (dd.mm.yyyy hh:mm:ss): ").strip()
-
             pattern = r'^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}$'
+
+            start_input = input("Start time (dd.mm.yyyy hh:mm:ss): ").strip()
 
             if not re.match(pattern, start_input):
                 print("Invalid start time format")
                 continue
+
+            end_input = input("End time (dd.mm.yyyy hh:mm:ss): ").strip()
+
             if not re.match(pattern, end_input):
                 print("Invalid end time format")
                 continue
@@ -255,58 +257,65 @@ if __name__ == '__main__':
             print("Now history is empty!")
 
         if i==4:
-            curr_page_f = list.head
-            domain = str(input("Enter the domain of the page(or part of it): "))
-            fl=0
-            cnt=0
-            for i1 in range(list.size):
-
-                if domain in curr_page_f.data.url:
-                    fl=1
-                    cnt+=1
-                    print(f" URL: {curr_page_f.data.url} Visit time:{time.ctime(float(curr_page_f.data.visit_time))} Bookmark:{curr_page_f.data.bookmark}")
-                if curr_page_f.next != None:
-                    curr_page_f = curr_page_f.next
-                else:
-                    break
-            if fl==0:
-                print("No such domain in history")
+            if list.size==0:
+                print("History is empty")
             else:
-                print(f"{cnt} pages found for this domain")
+                curr_page_f = list.head
+                domain = str(input("Enter the domain of the page(or part of it): "))
+                fl=0
+                cnt=0
+                for i1 in range(list.size):
+
+                    if domain in curr_page_f.data.url:
+                        fl=1
+                        cnt+=1
+                        print(f" URL: {curr_page_f.data.url} Visit time:{time.ctime(float(curr_page_f.data.visit_time))} Bookmark:{curr_page_f.data.bookmark}")
+                    if curr_page_f.next != None:
+                        curr_page_f = curr_page_f.next
+                    else:
+                        break
+                if fl==0:
+                    print("No such domain in history")
+                else:
+                    print(f"{cnt} pages found for this domain")
 
         if i==5:
-
-            start_ts, end_ts = get_valid_time_range()
-
-            curr_page_f = list.head
-            fl=0
-            cnt=0
-            while curr_page_f:
-                if start_ts <= float(curr_page_f.data.visit_time) <= end_ts:
-                    fl=1
-                    cnt+=1
-                    print(f" URL: {curr_page_f.data.url} Visit time:{time.ctime(float(curr_page_f.data.visit_time))} Bookmark:{curr_page_f.data.bookmark}")
-                curr_page_f = curr_page_f.next
-
-            if fl==0:
-                print("No browser history found for this time period")
+            if list.size==0:
+                print("History is empty")
             else:
-                print(f"{cnt} pages found for this time period")
+                start_ts, end_ts = get_valid_time_range()
+
+                curr_page_f = list.head
+                fl=0
+                cnt=0
+                while curr_page_f:
+                    if start_ts <= float(curr_page_f.data.visit_time) <= end_ts:
+                        fl=1
+                        cnt+=1
+                        print(f" URL: {curr_page_f.data.url} Visit time:{time.ctime(float(curr_page_f.data.visit_time))} Bookmark:{curr_page_f.data.bookmark}")
+                    curr_page_f = curr_page_f.next
+
+                if fl==0:
+                    print("No browser history found for this time period")
+                else:
+                    print(f"{cnt} pages found for this time period")
 
         if i==6:
-            f = open("data.b64", "r", encoding="utf-8")
-            b64_string = f.read()
-            decoded_data = base64.b64decode(b64_string).decode('utf-8').split("\r\n")
-            for i in decoded_data:
-
-                i=i.split()
-                page = BrowserHistory()
-                page.url = i[0]
-                page.visit_time = i[1]
-                page.bookmark = i[2]
-                list.insert_at_end(page)
-            print("Data from file was successfully added!")
-            print(f"Current history size {list.size}")
+            try:
+                f = open("data.b64", "r", encoding="utf-8")
+                b64_string = f.read()
+                decoded_data = base64.b64decode(b64_string).decode('utf-8').split("\r\n")
+                for i in decoded_data:
+                    i=i.split()
+                    page = BrowserHistory()
+                    page.url = i[0]
+                    page.visit_time = i[1]
+                    page.bookmark = i[2]
+                    list.insert_at_end(page)
+                print("Data from file was successfully added!")
+                print(f"Current history size {list.size}")
+            except:
+                print("Cannot open the file")
 
         if i==7:
             add_test_data(list)
